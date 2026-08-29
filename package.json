@@ -1,0 +1,26 @@
+{
+  "name": "fullStackMonorepo",
+  "version": "1.0.0",
+  "private": true, 
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "next:dev": "cd packages/next && pnpm run dev",
+    "next:build": "cd packages/next && pnpm run build",
+    "next:prod": "cd packages/next && pnpm run start",
+    "nest:watch": "cd packages/nest && pnpm run start:dev",
+    "nest:build": "cd packages/nest && pnpm run build",
+    "nest:prod": "cd packages/nest && pnpm run start:prod"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "^11.17.0",
+      "onFail": "download"
+    }
+  },
+  "type": "module"
+}

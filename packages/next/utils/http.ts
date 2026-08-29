@@ -1,5 +1,6 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
-import { store } from '@/app/store'
+import { getAccessToken, setAccessToken } from './util'
+import { apis } from './apis'
 
 interface IRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean
@@ -7,7 +8,7 @@ interface IRequestConfig extends InternalAxiosRequestConfig {
 
 const instance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BASE_URL,       // nest 服务
-    timeout: 10000,
+    timeout: 30000,
     withCredentials: true,      // http 携带 cookie
 })
 
@@ -16,7 +17,8 @@ let isRefreshing = false
 let requestWaitList = [] as any[]
 
 instance.interceptors.request.use((config) => {
-    const accessToken = store().getToken()
+    // const accessToken = store.getState().accessToken
+    const accessToken = getAccessToken()
     if (accessToken) {
         config.headers.Authorization = 'Bearer ' + accessToken
     }
@@ -28,11 +30,18 @@ instance.interceptors.response.use(
         return response
     },
     async (error: AxiosError) => {
+        console.log('http_error===', error)
+
         const originRequest = error.config as IRequestConfig
         // const { url, _retry } = originRequest || {}
         const { status, } = error.response || {}
 
-        if (status === 401 && !originRequest._retry && !originRequest.url?.includes('/refreshToken')) {
+        if (
+            status === 401 && 
+            !originRequest._retry && 
+            !originRequest.url?.includes('/refreshToken') && 
+            !originRequest.url?.includes('/logout')
+        ) {
             if (isRefreshing) {
                 // requestWaitList.push(originRequest)
                 return new Promise((resolve, reject) => {
@@ -45,7 +54,7 @@ instance.interceptors.response.use(
                     // 防止同一个请求进入拦截器逻辑
                     originRequest._retry = true
                     // 刷新token
-                    const {data: { data }} = await instance.post('/auth/refreshToken', {}, {withCredentials: true})
+                    const {data: { data }} = await instance.post(apis.refreshToken, {}, {withCredentials: true})
 
                     const accessToken = data?.accessToken || data
 
@@ -54,7 +63,8 @@ instance.interceptors.response.use(
                         resolve(instance.request(requestConfig))
                     })
 
-                    store().setToken(accessToken)
+                    // store().setToken(accessToken)
+                    setAccessToken(accessToken)
 
                     isRefreshing = false                 
 
@@ -64,13 +74,22 @@ instance.interceptors.response.use(
                 } catch(e) {
                     requestWaitList = []
                     isRefreshing = false 
-                    window.location.href = '/' 
+// window.location.href = '/' 
 
                     return Promise.reject(e)
                 }
             }
         } else {
-            return Promise.reject(error.response)
+            // 刷新token时报401，refreshToken 过期；
+            // 退出登录401，可能是前端 refreshToken 不正确/被篡改，重新登录
+            if (
+                status === 401 && 
+                (originRequest.url?.includes('/refreshToken') || originRequest.url?.includes('/logout'))
+            ) {
+                console.log('token过期异常')
+// window.location.href = '/'; 
+            }
+            return Promise.reject(error)
         }
         
     }

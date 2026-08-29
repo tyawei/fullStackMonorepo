@@ -1,7 +1,9 @@
 
 export const apis = {
-    login: '/auth/login',
-    queryHistory: '/depositeds/queryHistory',
+    login: '/api/auth/login',
+    logout: '/api/auth/logout',
+    refreshToken: '/api/auth/refreshToken',
 
-    getUser: '/user/',
+    queryHistory: '/api/history/list',
+    getUser: '/api/user/',
 }

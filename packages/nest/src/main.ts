@@ -11,9 +11,10 @@ async function bootstrap() {
 
   const configService = app.get(ConfigService)
   const PORT = configService.get<number>('PORT') || 3001
-  
   const cookieSecret = configService.get('COOKIE_SECRET') || ''
   app.use(cookieParser(cookieSecret))
+
+  app.setGlobalPrefix('api')
 
   app.useGlobalPipes(
     new ValidationPipe({

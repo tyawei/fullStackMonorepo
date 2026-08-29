@@ -64,8 +64,10 @@ export class AuthService {
         if (updateRes.affected) {
             // 注意这里不要存 hash后的 refreshToken，否则 refreshToken接口获取的 cookie，无法得到 user
             res.cookie(this.TOKEN_NAME, refreshToken, this.cookieOptions)
+
+            const { password, refreshTokenHash, ...rest } = user
             
-            return { accessToken }
+            return { accessToken, userInfo: rest }
         } else {
             throw new HttpException('update refreshToken failed', HttpStatus.INTERNAL_SERVER_ERROR)
         }
@@ -84,29 +86,30 @@ export class AuthService {
             secret: this.configService.get('JWT_FRESH_SECRET')
         })
 
-console.log('token_result===', result)
 
         if (!result || result?.id === undefined) {
             throw new HttpException('fail to get user info from refreshToken', HttpStatus.UNAUTHORIZED)
         } else {
             const user = await this.userService.findOne({id: result.id})
+
             if (user) {
                 const isValid = await bcrypt.compare(refreshToken, user.refreshTokenHash)
-
                 if (!isValid) throw new HttpException('token is expired', HttpStatus.UNAUTHORIZED)
 
                 const {accessToken, refreshToken: newRefreshToken} = await this.generateTokens(user)
 
                 // hash token
                 const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, this.salt)
+
                 if (!newRefreshTokenHash) throw new HttpException('fail to hash token', HttpStatus.INTERNAL_SERVER_ERROR)
                 // 更新数据库 token
                 const updateRes = await this.userService.update({id: user.id, refreshTokenHash: newRefreshTokenHash})
+
                 if (!updateRes.affected) throw new HttpException('update refreshToken failed', HttpStatus.INTERNAL_SERVER_ERROR)
 
                 res.cookie(this.TOKEN_NAME, newRefreshToken, this.cookieOptions)
-                
-                return {accessToken}
+
+                return { accessToken }
             } else {
                 throw new HttpException('the user does not exist', HttpStatus.UNAUTHORIZED)
             }
@@ -114,7 +117,48 @@ console.log('token_result===', result)
     }
 
     async removeRefreshToken(req: Request, res: Response) {
+        // 从 cookie上获取 refreshToken
+        // 根据refreshToken 获取user.id，并获取数据库中对应 user
+        // 验证refreshToken 和 user.refreshTokenHash，确定是当前登录用户 (关键，否则后端存活的token存在滥用安全风险)
+        // 清除 cookie上refreshToken 和 数据库 refreshTokenHash 
 
+        const logoutRes = { success: true }
+        const serverException = new HttpException('your info does not exist', HttpStatus.UNAUTHORIZED)
+
+        const refreshToken = req.cookies[this.TOKEN_NAME] || ''
+        if (!refreshToken) {
+            res.clearCookie(this.TOKEN_NAME)
+            return logoutRes
+        }
+
+        // 从 refreshToken 解析出用户信息
+        const payload = this.jwtService.verify(refreshToken, {
+            secret: this.configService.get('JWT_FRESH_SECRET') || ''
+        })
+        if (!payload || !payload.id) {
+            throw serverException
+        }
+
+        const user = await this.userService.findOne({id: payload.id})
+        if (!user) throw serverException
+
+        // 和数据库中user 的 refreshTokenHash 对比，确保当前token的用户确认存在且token正确
+        const isValid = await bcrypt.compare(refreshToken, user.refreshTokenHash)
+        if (!isValid) {
+            throw new HttpException('your token is incorrect', HttpStatus.UNAUTHORIZED)
+        }
+
+        const updateRes = await this.userService.update(
+            {id: payload.id, refreshTokenHash: ''}, 
+        )
+        if (updateRes.affected) {
+            res.clearCookie(this.TOKEN_NAME)
+
+            return logoutRes
+
+        } else {
+            throw serverException
+        }
     }
 
     // accessToken, refreshToken

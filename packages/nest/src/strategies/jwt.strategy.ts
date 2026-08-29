@@ -15,7 +15,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     constructor(
         @Inject() private readonly configService: ConfigService
     ) {
-        console.log('jwtStrategy===', configService.get('JWT_SECRET'))
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,

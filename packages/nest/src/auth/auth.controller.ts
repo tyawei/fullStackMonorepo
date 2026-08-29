@@ -9,7 +9,7 @@ export class AuthController {
     constructor(private readonly authService: AuthService) {}
 
     @HttpCode(HttpStatus.OK)
-    @Post('signIn')
+    @Post('login')
     async signIn(
         @Body() userDto: CreateUserDto,
         @Res({ passthrough: true }) res: Response
@@ -20,15 +20,16 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Post('refreshToken')
     async refreshToken(
-        @Req() req: Request, @Res() res: Response
+        @Req() req: Request, @Res({passthrough: true}) res: Response
     ) {
         return await this.authService.refreshToken(req, res)
     }
 
     // 退出登录
-    @Post('removeRefreshToken')
+    @HttpCode(HttpStatus.OK)
+    @Post('logout')
     async removeRefreshToken(
-        @Req() req: Request, @Res() res: Response
+        @Req() req: Request, @Res({passthrough: true}) res: Response
     ) {
         return await this.authService.removeRefreshToken(req, res)
     }

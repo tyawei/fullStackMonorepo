@@ -12,17 +12,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
         const status = exception.getStatus()
         const message = exception.message
 
-        const body = request.body
-        const params = request.params
-        const headers = request.headers
-        delete headers.authorization;
+        const body = request.body;
+        const params = request.params;
+        const headers = request.headers;
 
         // 避免打印出敏感信息
         if (body || params) {
             const sensitiveFields = ['password', 'token', 'accessToken', 'refreshToken', 'oldPassword', 'newPassword'];
             sensitiveFields.forEach(f => {
-                body[f] = '******'
-                params[f] = '******'
+                body && body[f] && (body[f] = '******');
+                params && params[f] && (params[f] = '******');
             })
         }
 

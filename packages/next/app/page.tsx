@@ -3,43 +3,53 @@ import { useRouter } from "next/navigation"
 import { useState, useEffect, } from 'react'
 import http from '../utils/http'
 import { apis } from "@/utils/apis"
-import { encryptPassword } from '@/utils/util'
 import { store } from "./store"
+import { encryptPassword, setAccessToken, setUserInfo } from '@/utils/util'
 
 export default function Login() {
     const navigate = useRouter()
+    const { loading, setLoading } = store()
     const [account, setAccount] = useState('admin')
     const [password, setPassword] = useState('admin')
     const [publicKey, setPublicKey] = useState('')
 
     useEffect(() => {
       (async function() {
+        // 加密公钥 /public/public_key.pem
         const res = await fetch('/public_key.pem')
         const publicKey = await res.text()
-        console.log('publicKey===', publicKey)
         setPublicKey(publicKey)
+
+        // 清除token缓存，本地某些调试 避免手动在浏览器清理
+        setAccessToken('')
+        setUserInfo(null)
       })()
     }, [])
 
     const toLogin = async () => {
       // rsa 加密密码
       try {
+        setLoading(true)
+
         const pwd = encryptPassword(password, publicKey)
-        console.log('pwd===', pwd)
-        if (!pwd) return console.log('加密失败')
+
+        if (!pwd) console.log('加密失败')
 
         const res = await http.post(apis.login, { account, password: pwd })
-        console.log('res===', res)
+
         const { code, data } = res.data
 
         if (code === 200) {
-          store().setToken(data?.accessToken || '')
+          setAccessToken(data?.accessToken || '')
+          setUserInfo(data?.userInfo)
           navigate.push('/home')
         } else {
           console.log('登录报错===', data)
         }
       } catch(e) {
-        console.log('e===', e) 
+        console.log('登录报错e===', e) 
+      } finally {
+        setLoading(false)
       }
     }
 
@@ -55,6 +65,8 @@ export default function Login() {
           <input value={password} onChange={e => setPassword(e.target.value)} 
                 id="password" className="ml-[6px] focus:outline-none border-b border-b-[#333]" />
         </div>
-        <button onClick={toLogin} className="mt-[10px] px-[10px] py-[4px] rounded-[4px] bg-[#333]">确定</button>
+        <button onClick={loading ? () => {} : toLogin} className="mt-[10px] px-[10px] py-[4px] rounded-[4px] bg-[#333]">
+          {loading ? '登录中' : '确定'}
+        </button>
     </div>
 }

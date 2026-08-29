@@ -10,12 +10,18 @@ export class LoggingAndFmtResInterceptor implements NestInterceptor {
         const response = context.switchToHttp().getResponse<Response>()
         const request = context.switchToHttp().getResponse<Request>()
 
-        const headers = request.headers
-        delete headers.authorization;
+        const body = request.body;
+        const params = request.params;
+        const headers = request.headers;
 
-        const body = request.body        
-        const sensitiveFields = ['password', 'token', 'accessToken', 'refreshToken', 'oldPassword', 'newPassword'];
-        sensitiveFields.forEach(f => {body[f] = '******'})
+        // 避免打印出敏感信息
+        if (body || params) {
+            const sensitiveFields = ['password', 'token', 'accessToken', 'refreshToken', 'oldPassword', 'newPassword'];
+            sensitiveFields.forEach(f => {
+                body && body[f] && (body[f] = '******');
+                params && params[f] && (params[f] = '******');
+            })
+        }
 
         return next.handle().pipe(
             map(data => {
@@ -26,7 +32,7 @@ export class LoggingAndFmtResInterceptor implements NestInterceptor {
                 }
             }),
             tap(data => {
-                this.logger.log(`\n${request.url}---------`+JSON.stringify({
+                this.logger.log(`\n${request.originalUrl}---------`+JSON.stringify({
                     headers,
                     request: {
                         method: request.method,
@@ -44,7 +50,7 @@ export class LoggingAndFmtResInterceptor implements NestInterceptor {
             }),
             catchError(err => {
                 this.logger.error(
-                    `${request.url}-----${JSON.stringify(err)}`
+                    `${request.originalUrl}-----${JSON.stringify(err)}`
                 )
                 return throwError(() => err)
             })

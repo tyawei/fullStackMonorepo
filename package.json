@@ -5,9 +5,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "next:install": "cd packages/next && pnpm install",
     "next:dev": "cd packages/next && pnpm run dev",
     "next:build": "cd packages/next && pnpm run build",
     "next:prod": "cd packages/next && pnpm run start",
+    "nest:install": "cd packages/nest && pnpm install",
     "nest:watch": "cd packages/nest && pnpm run start:dev",
     "nest:build": "cd packages/nest && pnpm run build",
     "nest:prod": "cd packages/nest && pnpm run start:prod"

@@ -23,6 +23,9 @@ const envConfigObj = Joi.object({
     COOKIE_SECRET: Joi.string(),
 
     RSA_PRIVATE_KEY_PATH: Joi.string(),
+
+    ACCOUNTS: Joi.string(),
+    PASSWORDS: Joi.string(),
 })
 
 export default envConfigObj

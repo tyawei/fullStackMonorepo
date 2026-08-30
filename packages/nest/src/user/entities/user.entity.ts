@@ -1,3 +1,4 @@
+import { rolesEnum } from "src/utils/constants";
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('users')
@@ -12,7 +13,7 @@ export class User {
     password: string;
 
     @Column({
-        default: 'user',
+        default: rolesEnum.user,
         comment: 'admin,user is a example'
     })
     roles: string;

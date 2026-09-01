@@ -27,7 +27,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
         const fmtedRequest = `headers:${JSON.stringify(headers)};;;body:${body? JSON.stringify(body) : null};;;params:${params? JSON.stringify(params) : null}`
         this.logger.error(
-            `${request.url}------------${fmtedRequest}`
+            `${request.originalUrl}------------${fmtedRequest}`
         )
 
         response.status(status).json({

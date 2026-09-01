@@ -24,8 +24,5 @@
       "onFail": "download"
     }
   },
-  "type": "module",
-  "pnpm": {
-    "onlyBuiltDependencies": ["bcrypt"]
-  }  
+  "type": "module"
 }

@@ -8,8 +8,6 @@ export class CreateUserDto {
 
     @IsString()
     @IsNotEmpty()
-    @MaxLength(128)
-    @MinLength(6)
     password: string;
 
     // 角色字符串需要特定值，由管道验证

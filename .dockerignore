@@ -1,4 +1,7 @@
 node_modules
+**/node_modules
 .git
-*.log
+**/.log
 Dockerfile
+**/.next
+**/dist

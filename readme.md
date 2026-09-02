@@ -10,7 +10,12 @@ openssl rsa -in private_key.pem -pubout -out public_key.pem
 - 所以，根据AI 查询的建议，最终只能采取降低项目和Docker的 pnpm 版本为 V10的版本完全走通 docker compose，node 版本设置为 22，同时将Docker 中一些项目中不存在目录的相关COPY 命令去掉（比如开始写过nest 中的 migrations 目录，但是项目暂未添加数据库/表初始化相关功能）。
 - next/Dockerfile 中， NEXT_PUBLIC_BASE_URL 是在 构建阶段 被打包进js代码中，所以这个参数需要在compose.yaml 配置在 build.args 下，然后 Dockerfile 通过 ARG 接收构建参数，前端js 通过 process.env.NEXT_PUBLIC_BASE_URL获取，走通 Next.js。
 - 关于 compose.yaml 的 build.args 和 environment 配置项，前者仅在构建阶段（run build，比如axios baseURL 配置）生效，后者则是运行阶段（runner,node 启动脚本，比如访问数据库的配置、jwt）生效。
-- 而 Dockerfile 通过 ARG 接收到 build.args 参数后，通过 ENV 声明为镜像内环境变量后，运行阶段同样可以用($PARAM 或者 ${PARAM})，并且 Nest.js 中 ConfigService.get 方法也可以获取。
+- 而 Dockerfile 通过 ARG 接收到 build.args 参数后，通过 ENV 声明为镜像内环境变量后，运行阶段同样可以用($PARAM 或者 ${PARAM})，并且 Nest.js 中 ConfigService.get 方法也可以获取，走通 Nest.js。
+
+## 后续
+- 1. .env 环境变量加载问题：去掉根目录 .env ， compose.yaml 通过加载各自 Dockerfile，Dockerfile 的 env_file 加载 .env 文件，compose.yaml 也可以分base，dev, prod 等。如果生产环境 .env 不太安全，尝试将所有变量直接写在 Dockerfile 的 build.args 和 environment，将其也分 dev prod。
+- 2. 数据库 migrations ，部署数据库时动态生成，避免生产设置 synchorize: true 同步数据。
+- 3. 买阿里云服务器，将当前项目先在生产走通。
 
 ## 注意 
 ### 1. postgres 基础镜像环境变量名的问题：

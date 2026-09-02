@@ -27,7 +27,8 @@ ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL}
 # 这项设置可避免请求遥测，防止next框架收集项目内的数据
 ENV NEXT_TELEMETRY_DISABLED=1
         # 执行next项目打包，这里去掉 --filter next，也许因为需要完整的workspace 项目结构，才能正确解析依赖
-        # 另外如果加上 --frozen-lockfile，next 目录的 pnpm-lock.yaml 可能会在运行docker 构建过程中自动被修改(有一些 --- 分隔符号)，导致报错，暂时去掉
+        # 另外如果加上 --frozen-lockfile，next 目录的 pnpm-lock.yaml 可能会在运行docker 构建过程中自动被修改(有一些 --- 分隔符号)，
+        # 导致报错(更可能是项目中pnpm 和Dockerfile的版本冲突，因为pnpm版本修改过)
 RUN pnpm --filter next run build
 
 # 4.运行阶段

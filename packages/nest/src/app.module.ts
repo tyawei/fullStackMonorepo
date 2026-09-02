@@ -24,17 +24,22 @@ import { AuthModule } from './auth/auth.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: (configService: ConfigService) => {
         // type: configService.get<string>('DB_TYPE') || 'postgres',
-        type: 'postgres',
-        host: configService.get<string>('PG_HOST') || '',
-        port: configService.get<number>('PG_PORT') || 5432,
-        username: configService.get<string>('PG_USER') || '',
-        password: configService.get<string>('PG_PASSWORD') || '',
-        database: configService.get<string>('PG_DATABASE') || '',
-        entities: [User, History],
-        synchronize: false,
-      })
+        console.log('node_env===', configService.get<string>('NODE_ENV'))
+        return  {
+          type: 'postgres',
+          host: configService.get<string>('POSTGRES_HOST') || '',
+          port: configService.get<number>('POSTGRES_PORT') || 5432,
+          username: configService.get<string>('POSTGRES_USER') || '',
+          password: configService.get<string>('POSTGRES_PASSWORD') || '',
+          database: configService.get<string>('POSTGRES_DB') || '',
+          entities: [User, History],
+          // synchronize: configService.get<string>('NODE_ENV') === 'development',
+          synchronize: true,
+          autoLoadEntities: true,
+        }
+      }
     })
   ],
   controllers: [AppController],

@@ -9,11 +9,12 @@ const envConfigObj = Joi.object({
     // # postgres 数据库
     DB_TYPE: Joi.string().valid('postgres', 'mysql').default('postgres'),
     DB_URL: Joi.string(),
-    PG_USER: Joi.string(),
-    PG_PASSWORD: Joi.string(),
-    PG_HOST: Joi.string(),
-    PG_PORT: Joi.number(),
-    PG_DATABASE: Joi.string(),
+    // docker postgres 镜像默认的参数名
+    POSTGRES_USER: Joi.string(),
+    POSTGRES_PASSWORD: Joi.string(),
+    POSTGRES_HOST: Joi.string(),
+    POSTGRES_PORT: Joi.number(),
+    POSTGRES_DB: Joi.string(),
 
     // # 暂时写这些
     JWT_SECRET: Joi.string(),

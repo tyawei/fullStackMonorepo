@@ -26,12 +26,24 @@ services:
     container_name: mono_nest
     restart: unless-stopped
     environment: 
-      NODE_ENV: production
-      DATABASE_HOST: postgres     # 这里是以上定义的 postgres 服务名
-      DATABASE_PORT: 5432
-      DATABASE_USER: ${POSTGRES_USER}
-      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
-      DATABASE_NAME: ${POSTGRES_DB}
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
+      DB_TYPE: ${DB_TYPE}
+      DB_URL: ${DB_URL}
+      # 这里是以上定义的 postgres 服务名或容器名，不能写localhost(容器网络之间不能用localhost)
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_HOST: postgres    
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_EXPIRES: ${ACCESS_TOKEN_EXPIRES}
+      JWT_FRESH_SECRET: ${JWT_FRESH_SECRET}
+      FRESH_TOKEN_EXPIRES: ${FRESH_TOKEN_EXPIRES}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      RSA_PRIVATE_KEY_PATH: ${RSA_PRIVATE_KEY_PATH}
+      ACCOUNTS: ${ACCOUNTS}
+      PASSWORDS: ${PASSWORDS}
       # redis 连接地址，服务名（如果有redis
       # REDIS_HOST: redis
       # REDIS_PORT: 6379

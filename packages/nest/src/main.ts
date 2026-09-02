@@ -27,9 +27,11 @@ async function bootstrap() {
 
   app.useGlobalInterceptors(new LoggingAndFmtResInterceptor())
 
-  if (configService.get('NODE_ENV') === 'development') {
+  // 临时测试
+  // if (configService.get('NODE_ENV') === 'development') {
+  if (true) {
     app.enableCors({ 
-      origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://172.20.112.1:3000'], 
+      origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], 
       credentials: true,
       // // 以上两项跨域设置必须
       // allowedHeaders: ['Content-Type', 'Authorization'],

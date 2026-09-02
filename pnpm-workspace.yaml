@@ -1,16 +1,15 @@
 packages:
   - "packages/*"
 
-# 旧版本配置项 allowBuilds 现在已经被弃用，已经不是标准配置
-allowBuilds:
-  bcrypt: true
-  esbuild: true
-  unrs-resolver: true
+# allowBuilds:
+#   bcrypt: true
+#   esbuild: true
+#   unrs-resolver: true
 
 # pnpm V11+对原生依赖的构建脚本做了严格限制，包含 bcrypt@6.0.0  unrs-resolver@1.12.2
 # 他们内部都会执行 install / build script ，pnpm 默认会拦截
 # 这里声明允许 list，docker build 会直接通过，不会再需要批准
-# onlyBuiltDependencies:
-#   - bcrypt
-#   - esbuild
-#   - unrs-resolver
+onlyBuiltDependencies:
+  - bcrypt
+  - esbuild
+  - unrs-resolver

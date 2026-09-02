@@ -6,15 +6,15 @@ services:
     container_name: mono_postgres
     restart: unless-stopped
     environment:
-      PG_USER: ${PG_USER}
-      PG_PASSWORD: ${PG_PASSWORD}
-      PG_DATABASE: ${PG_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports: 
       - "5432:5432"       # 宿主机端口:容器端口(这里方便本地可能会连接，生产不映射)
     volumes:
       - postgres_data:/var/lib/postgresql/data  # 持久化：容器内数据目录挂载到宿主机数据卷
     healthcheck:      #健康检查，保证数据库准备好后再启动后端
-      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DATABASE}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -29,9 +29,9 @@ services:
       NODE_ENV: production
       DATABASE_HOST: postgres     # 这里是以上定义的 postgres 服务名
       DATABASE_PORT: 5432
-      DATABASE_USER: ${PG_USER}
-      DATABASE_PASSWORD: ${PG_PASSWORD}
-      DATABASE_NAME: ${PG_DATABASE}
+      DATABASE_USER: ${POSTGRES_USER}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_NAME: ${POSTGRES_DB}
       # redis 连接地址，服务名（如果有redis
       # REDIS_HOST: redis
       # REDIS_PORT: 6379
@@ -47,15 +47,19 @@ services:
     build: 
       context: .
       dockerfile: packages/next/Dockerfile
-    container_name: mono-next
+      # 传递给 Dockerfile 构建参数(仅build构建阶段可用)
+      args:
+        NEXT_PUBLIC_BASE_URL: ${BACKEND_URL}   
+    container_name: mono_next
     restart: unless-stopped
+    # 运行阶段可用
     environment:
       NODE_ENV: production
       # 这个是浏览器访问地址，需要是宿主机可访问的地址
       # 如果是本地就是localhost，云服务器就是ip或者域名
       # 也可理解为：next服务侧如何请求nest，如果前端代码在浏览器运行，则必须使用宿主机地址；如果SSR在容器内运行，则需要用容器网络地址
       # 这里简化：假设浏览器直接请求后端，或者使用 next 的API转发
-      NEXT_PUBLIC_API_URL: ${BACKEND_URL}
+      NEXT_PUBLIC_BASE_URL: ${BACKEND_URL}
     ports:
       - "3000:3000"
     depends_on:

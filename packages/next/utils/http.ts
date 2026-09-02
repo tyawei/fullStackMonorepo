@@ -6,6 +6,7 @@ interface IRequestConfig extends InternalAxiosRequestConfig {
     _retry?: boolean
 }
 
+console.log('next_env===', process.env.NEXT_PUBLIC_BASE_URL)
 const instance = axios.create({
     baseURL: process.env.NEXT_PUBLIC_BASE_URL,       // nest 服务
     timeout: 30000,

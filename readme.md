@@ -16,6 +16,7 @@ openssl rsa -in private_key.pem -pubout -out public_key.pem
 - 1. .env 环境变量加载问题：去掉根目录 .env ， compose.yaml 通过加载各自 Dockerfile，Dockerfile 的 env_file 加载 .env 文件，compose.yaml 也可以分base，dev, prod 等。如果生产环境 .env 不太安全，尝试将所有变量直接写在 Dockerfile 的 build.args 和 environment，将其也分 dev prod。
 - 2. 数据库 migrations ，部署数据库时动态生成，避免生产设置 synchorize: true 同步数据。
 - 3. 买阿里云服务器，将当前项目先在生产走通。
+- 4. 添加 redis 功能
 
 ## 注意 
 ### 1. postgres 基础镜像环境变量名的问题：

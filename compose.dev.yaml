@@ -1,0 +1,100 @@
+# version: "3.8"      # 目前基本废弃
+
+services:
+  postgres:
+    image: postgres:16-alpine       # 官方 V16 镜像
+    container_name: mono_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports: 
+      - "5432:5432"       # 宿主机端口:容器端口(这里方便本地可能会连接，生产不映射)
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # 持久化：容器内数据目录挂载到宿主机数据卷
+    healthcheck:      #健康检查，保证数据库准备好后再启动后端
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  nest:
+    # 如果使用本地构建的镜像（名称：nest-api），则使用 build 配置；如果使用远程仓库镜像，则使用 image 配置
+    image: crpi-nlunnwaw6bh9i3ah.cn-beijing.personal.cr.aliyuncs.com/tyaweitest/nest-api-v1:latest
+    # build:
+    #   context: .      # 根目录为构建上下文
+    #   dockerfile: packages/nest/Dockerfile
+    container_name: mono_nest
+    restart: unless-stopped
+    environment: 
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PORT}
+      DB_TYPE: ${DB_TYPE}
+      DB_URL: ${DB_URL}
+      # 这里是以上定义的 postgres 服务名或容器名，不能写localhost(容器网络之间不能用localhost)
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_HOST: postgres    
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      ACCESS_TOKEN_EXPIRES: ${ACCESS_TOKEN_EXPIRES}
+      JWT_FRESH_SECRET: ${JWT_FRESH_SECRET}
+      FRESH_TOKEN_EXPIRES: ${FRESH_TOKEN_EXPIRES}
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      RSA_PRIVATE_KEY_PATH: ${RSA_PRIVATE_KEY_PATH}
+      ACCOUNTS: ${ACCOUNTS}
+      PASSWORDS: ${PASSWORDS}
+      # redis 连接地址，服务名（如果有redis
+      # REDIS_HOST: redis
+      # REDIS_PORT: 6379
+      # 允许请求来源：前端地址
+      CORS_ORIGIN: ${FRONTEND_URL}
+    ports:    
+      - "3001:3001"     # 这里是可选，也可以通过 nginx 配置代理可以直接访问
+    depends_on:
+      postgres: 
+        condition: service_healthy
+  
+  next:
+    # 如果使用本地构建的镜像（名称：next-web），则使用 build 配置；如果使用远程仓库镜像，则使用 image 配置
+    image: crpi-nlunnwaw6bh9i3ah.cn-beijing.personal.cr.aliyuncs.com/tyaweitest/next-v1:latest
+    # build: 
+    #   context: .
+    #   dockerfile: packages/next/Dockerfile
+    #   # 传递给 Dockerfile 构建参数(仅build构建阶段可用)
+    #   args:
+    #     NEXT_PUBLIC_BASE_URL: ${BACKEND_URL}   
+    container_name: mono_next
+    restart: unless-stopped
+    # 运行阶段可用
+    environment:
+      NODE_ENV: production
+      # 这个是浏览器访问地址，需要是宿主机可访问的地址
+      # 如果是本地就是localhost，云服务器就是ip或者域名
+      # 也可理解为：next服务侧如何请求nest，如果前端代码在浏览器运行，则必须使用宿主机地址；如果SSR在容器内运行，则需要用容器网络地址
+      # 这里简化：假设浏览器直接请求后端，或者使用 next 的API转发
+      NEXT_PUBLIC_BASE_URL: ${BACKEND_URL}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - nest      # 后端启动后再启动前端
+
+  nginx: 
+    image: nginx:alpine
+    container_name: mono_nginx
+    restart: unless-stopped
+    volumes: 
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "80:80"     # 宿主机端口映射到容器80
+    depends_on:
+      - next
+      - nest
+    
+
+# 声明数据卷（由Docker管理，存放在 /var/lib/docker/volumes 下）
+volumes:
+  postgres_data:
+  redis_data:

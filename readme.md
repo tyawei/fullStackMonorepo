@@ -27,3 +27,15 @@ next.config.ts 配置 output: 'standalone'，可以便于docker COPY 和构建�
 
 ### 3. 项目根目录 .env 变量在 Dockerfile 中配置问题：
 在 Next.js 中，比如 axios.create({baseURL: process.env.NEXT_PUBLIC_BASE_URL}) 的配置变量，本地开发阶段有 next 目录下 .env 配置；而 docker 构建时，需要定义 environment 环境变量，名称和 process.env.xxx 保持一致
+
+### 4. 本地打包镜像上传阿里云 ACR
+先后执行 docker login --username=xxx 镜像服务地址，docker build ...，docker tag imageName 仓库url:镜像版本号，docker push 仓库url:镜像版本号，然后由于Dockerfile 依赖 monorepo 根目录，需要在仓库根目录执行比如：
+``` shell
+docker buildx build \
+  --provenance==false --sbom=false \
+  -t next-v1:latest \
+  -f packages/next/Dockerfile \
+  --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:3001 \
+  .
+```
+根目录相关文件才找得到，然后 docker tag 和 docker push。同时，值得注意的是，compose.yaml 文件中 next 的image 配置的镜像，需要在构建镜像的时候，传入环境变量 NEXT_PUBLIC_BASE_URL，否则Dockerfile 内就获取不到。

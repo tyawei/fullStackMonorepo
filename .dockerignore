@@ -5,3 +5,10 @@ node_modules
 Dockerfile
 **/.next
 **/dist
+
+.env
+.env.*
+!.env.example
+
+#.pem
+!packages/nest/private_key.pem

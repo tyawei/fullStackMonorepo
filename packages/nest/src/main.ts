@@ -29,16 +29,23 @@ async function bootstrap() {
 
   // 临时测试
   // if (configService.get('NODE_ENV') === 'development') {
-  if (true) {
+  // if (true) {
     app.enableCors({ 
-      origin: ['http://localhost:3000', 'http://127.0.0.1:3000'], 
+      origin: [
+        'http://localhost:3000', 
+        'http://127.0.0.1:3000', 
+        'http://localhost', 
+        'http://123.57.237.196',
+        'https://123.57.237.196',
+        'https://123.57.237.196:3000',
+      ], 
       credentials: true,
       // // 以上两项跨域设置必须
       // allowedHeaders: ['Content-Type', 'Authorization'],
       // methods: ['GET', 'POST']
     })
-  }
+  // }
 
-  await app.listen(PORT);
+  await app.listen(PORT, '0.0.0.0');
 }
 bootstrap();

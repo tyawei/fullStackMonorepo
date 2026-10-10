@@ -1,9 +1,16 @@
 node_modules
 **/node_modules
+!packages/next/.next/standalone/node_modules
+!packages/next/.next/standalone/packages/next/node_modules
 .git
 **/.log
 Dockerfile
 **/.next
+!packages/next/.next/
+!packages/next/.next/standalone/
+!packages/next/.next/standalone/**
+!packages/next/.next/static/
+!packages/next/.next/static/**
 **/dist
 
 .env

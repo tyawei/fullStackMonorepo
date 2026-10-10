@@ -27,7 +27,7 @@ export class AuthService {
             path: '/',
             secure: configService.get('NODE_ENV') === 'production',
             httpOnly: true,
-            sameSite: 'strict',
+            sameSite: 'strict', // 控制跨站请求是否携带cookie，防止CSRF,Cookie 仅在完全同站的请求中发送，任何形式的跨站请求都不会携带。
         }
     }
 

@@ -21,10 +21,10 @@ services:
 
   nest:
     # 如果使用本地构建的镜像（名称：nest-api），则使用 build 配置；如果使用远程仓库镜像，则使用 image 配置
-    image: crpi-nlunnwaw6bh9i3ah.cn-beijing.personal.cr.aliyuncs.com/tyaweitest/nest-api-v1:latest
-    # build:
-    #   context: .      # 根目录为构建上下文
-    #   dockerfile: packages/nest/Dockerfile
+    # image: crpi-nlunnwaw6bh9i3ah.cn-beijing.personal.cr.aliyuncs.com/tyaweitest/nest-api-v1:latest
+    build:
+      context: .      # 根目录为构建上下文
+      dockerfile: packages/nest/Dockerfile.dev
     container_name: mono_nest
     restart: unless-stopped
     environment: 
@@ -59,13 +59,13 @@ services:
   
   next:
     # 如果使用本地构建的镜像（名称：next-web），则使用 build 配置；如果使用远程仓库镜像，则使用 image 配置
-    image: crpi-nlunnwaw6bh9i3ah.cn-beijing.personal.cr.aliyuncs.com/tyaweitest/next-v1:latest
-    # build: 
-    #   context: .
-    #   dockerfile: packages/next/Dockerfile
-    #   # 传递给 Dockerfile 构建参数(仅build构建阶段可用)
-    #   args:
-    #     NEXT_PUBLIC_BASE_URL: ${BACKEND_URL}   
+    # image: crpi-nlunnwaw6bh9i3ah.cn-beijing.personal.cr.aliyuncs.com/tyaweitest/next-v1:v1.7
+    build: 
+      context: .
+      dockerfile: packages/next/Dockerfile.dev
+      # 传递给 Dockerfile 构建参数(仅build构建阶段可用)
+      args:
+        NEXT_PUBLIC_BASE_URL: ${BACKEND_URL}   
     container_name: mono_next
     restart: unless-stopped
     # 运行阶段可用

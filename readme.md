@@ -34,8 +34,30 @@ next.config.ts 配置 output: 'standalone'，可以便于docker COPY 和构建�
 docker buildx build \
   --provenance==false --sbom=false \
   -t next-v1:latest \
+  --platform linux/amd64 \
   -f packages/next/Dockerfile \
   --build-arg NEXT_PUBLIC_BASE_URL=http://localhost:3001 \
   .
 ```
 根目录相关文件才找得到，然后 docker tag 和 docker push。同时，值得注意的是，compose.yaml 文件中 next 的image 配置的镜像，需要在构建镜像的时候，传入环境变量 NEXT_PUBLIC_BASE_URL，否则Dockerfile 内就获取不到。
+
+### 5. 在阿里云ECS 终端运行 docker compose up 相关命令拉取compose.prod.yaml 中 nginx postgresql 镜像
+会因为默认拉取 docker hub 的镜像而失败，需要修改 ~/etc/docker/daemon.json 中的docker 配置，并使之生效：
+```shell
+sudo mkdir -p /etc/docker
+sudo tee /etc/docker/daemon.json <<-'EOF'
+{"registry-mirrors": ["https://1ms.run/","https://docker.1panel.live","https://docker-cf.registry.cyou"]}
+EOF
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
+这时候再次拉取镜像可成功
+
+### 6. 在 compose.prod.yaml 中 next 下配置 platform: linux/amd64 
+此项配置主要是由于阿里云ECS 终端运行docker compose up 相关命令，提示 next nest 两项来自镜像仓库的镜像的系统架构是 arm64，且尝试了所有方式均无法修改（包括设置 --platform linux/amd64）。所以这里直接显式设置
+
+## next 生产部署的问题
+首先，按默认的 docker buildx build ... 不携带 --platform linux/amd64 参数，打包镜像的架构类型是本机的架构类型（可能是 arm64、amd64）；
+在 window11 系统打包的镜像是 amd64 ，而部署在阿里云 linux 系统上（拉取镜像），由于和服务器的 amd64 架构不匹配导致运行报错；
+因此，本地构建镜像时，只能选择在docker buildx build 加上 --platform linux/amd64 参数，然而，构建过程执行到 run build，由于加上这个参数，导致触发 QEMU 报错而无法成功构建；
+当前可选解决方案有两个：1. 先在本地打包（pnpm --filter next run build），然后在 next/Dockerfile.prod 拷贝 .next/standalone（需要在next.config.ts 配置 output: 'standalone' ）到 docker 的workdir 下，经过多次尝试，在阿里云ECS 服务器终端 docker logs mono_next 始终有 cannot find module 'next' 的报错，当然，本地dev 模式没问题；2. 将 next.config.ts 的 output 修改为 'export'，这种情况 Dockerfile 只需要处理 run build ，并将打包的 dist 静态文件目录拷贝到 nginx 的静态文件目录即可，不需要在 compose.prod.yaml 增加 next 服务配置
